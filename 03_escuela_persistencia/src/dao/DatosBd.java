@@ -1,14 +1,19 @@
 package dao;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
 
 public class DatosBd {
-	static String cadena="jdbc:mysql://localhost:3306/almacen";
-	static String user="root";
-	static String pwd="root";
-	public static Connection getConnection() throws SQLException{
-		return DriverManager.getConnection(cadena,user,pwd);
+
+	private static EntityManager em;
+
+	public static EntityManager getEntityManager() {
+		if (em == null) {
+			EntityManagerFactory factory = Persistence.createEntityManagerFactory("escuelaPU");
+			em = factory.createEntityManager();
+		}
+		return em;
+
 	}
 }

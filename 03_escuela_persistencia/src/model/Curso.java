@@ -26,6 +26,6 @@ public class Curso {
 	private int duracion;
 	private double precio;
 	private LocalDate fechaInicio;
-	@OneToMany(mappedBy = )
+	@OneToMany(mappedBy = "curso")
 	private List<Alumno> alumnos;
 }

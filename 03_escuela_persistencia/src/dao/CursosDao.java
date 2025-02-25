@@ -1,108 +1,56 @@
 package dao;
 
-import static dao.DatosBd.getConnection;
+import static dao.DatosBd.getEntityManager;
 
-import java.sql.Connection;
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.List;
 
+import jakarta.persistence.EntityTransaction;
+import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
 import model.Curso;
 
 public class CursosDao {
 	public double averagePrecio() {
-		try(Connection con=getConnection()){
-			String sql="select avg(precio) from cursos";
-			PreparedStatement ps=con.prepareStatement(sql);
-			
-			ResultSet rs=ps.executeQuery();
-			if(rs.next()) {
-				return rs.getDouble(1);
-			}
-			return 0;
-		}
-		catch(SQLException ex) {
-			ex.printStackTrace();
-			return 0;
-		}
+		String jpql = "select avg(c.precio) from Curso c";
+		TypedQuery<Double> query = getEntityManager().createQuery(jpql, Double.class);
+		return query.getSingleResult();
 	}
-	
-	public void save(Curso curso) {
-		try(Connection con=getConnection()){
-			String sql="insert into cursos(denominacion,duracion,precio,fechaInicio) values(?,?,?,?)";
-			PreparedStatement st=con.prepareStatement(sql);
-			st.setString(1, curso.getDenominacion());
-			st.setInt(2, curso.getDuracion());
-			st.setDouble(3, curso.getPrecio());
-			//convertimos de LocalDate a java.sql.Date para 
-			//poder grabarlo en la BD
-			st.setDate(4, Date.valueOf(curso.getFechaInicio()));
-			st.execute();
-		}
-		catch(SQLException ex) {
-			ex.printStackTrace();
-		}
-	}
-	public Curso findByIdCurso(int codigo) {
-		//buscar curso por su código
-		try(Connection con=getConnection()){
-			String sql="select * from cursos where idCurso=?";
-			PreparedStatement ps=con.prepareStatement(sql);
-			ps.setInt(1, codigo);
-			ResultSet rs=ps.executeQuery();
-			if(rs.next()) {
-				return new Curso(
-						rs.getInt("idCurso"),
-						rs.getString("denominacion"),
-						rs.getInt("duracion"),
-						rs.getDouble("precio"),
-						rs.getDate("fechaInicio").toLocalDate()
-						);
-			}
-			return null;
-		}
-		catch(SQLException ex) {
-			ex.printStackTrace();
-			return null;
-		}
-	}
-	
-	public Curso findByDenominacionAndFechaInicio(String denominacion, LocalDate fechaInicio) {
-		try(Connection con=getConnection()){
-			String sql="select * from cursos where denominacion=? and fechaInicio=?";
-			PreparedStatement ps=con.prepareStatement(sql);
-			ps.setString(1,denominacion);
-			ps.setDate(2,Date.valueOf(fechaInicio));
-			ResultSet rs=ps.executeQuery();
-			if(rs.next()) {
-				return new Curso(
-						rs.getInt("idCurso"),
-						rs.getString("denominacion"),
-						rs.getInt("duracion"),
-						rs.getDouble("precio"),
-						rs.getDate("fechaInicio").toLocalDate()
-						);
-			}
-			return null;
-		}
-		catch(SQLException ex) {
-			ex.printStackTrace();
-			return null;
-		}
-	}
-	public void delete(int idCurso) {
-		try(Connection con=getConnection()){
-			String sql="delete from cursos where idCurso=?";
-			PreparedStatement st=con.prepareStatement(sql);
-			st.setInt(1, idCurso);
-			st.execute();
-		}
-		catch(SQLException ex) {
-			ex.printStackTrace();	
-		}
-	}
-	
 
+	public void save(Curso curso) {
+		EntityTransaction tx = getEntityManager().getTransaction();
+		tx.begin();
+		getEntityManager().persist(curso);
+		tx.commit();
+	}
+
+	public Curso findByIdCurso(int codigo) {
+		return getEntityManager().find(Curso.class, codigo);
+	}
+
+	public Curso findByDenominacionAndFechaInicio(String denominacion, LocalDate fechaInicio) {
+		String jpql = "select c from Curso c where c.denominacion=?1 and c.fechaInicio=?2";
+		TypedQuery<Curso> query = getEntityManager().createQuery(jpql, Curso.class);
+		query.setParameter(1, denominacion);
+		query.setParameter(2, fechaInicio);
+		List<Curso> cursos = query.getResultList();
+		return cursos.size() == 0 ? null : cursos.get(0);
+	}
+
+	public void delete(int idCurso) {
+		String jpql = "delete from Curso c where curso.idCurso=?1";
+		Query query = getEntityManager().createQuery(jpql);
+		query.setParameter(1, idCurso);
+		query.executeUpdate();
+	}
+
+	// Curso en el que está matriculado un alumno cuyo dni se recibe como parámetro
+
+	public Curso cursoAlumno(String dni) {
+		String jpql = "select c from Curso c join c.alumnos a where a.dni=?1";
+		TypedQuery<Curso> query = getEntityManager().createQuery(jpql, Curso.class);
+		query.setParameter(1, dni);
+		List<Curso> cursos = query.getResultList();
+		return cursos.size() == 0 ? null : cursos.get(0);
+	}
 }
