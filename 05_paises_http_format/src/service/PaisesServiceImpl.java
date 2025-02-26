@@ -1,8 +1,8 @@
 package service;
 
-import java.time.ZonedDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 import locator.StreamLocator;
 import model.Pais;
@@ -21,9 +21,8 @@ public class PaisesServiceImpl implements PaisesService {
 	}
 
 	@Override
-	public ZonedDateTime horaPorPais(String continente) {
-		// TODO Auto-generated method stub
-		return null;
+	public Optional<Pais> paisPorNombre(String pais) {
+		return StreamLocator.streamPaises().filter(p -> p.getName().equals(pais)).findFirst();
 	}
 
 }

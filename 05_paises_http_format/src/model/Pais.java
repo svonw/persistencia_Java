@@ -17,6 +17,10 @@ public class Pais {
 	@SerializedName("population")
 	private long habitantes;
 	@SerializedName("alpha2Code")
-	private String formatPais;
+	private String codigoPais;
+	@SerializedName("languages")
+	private Idioma[] idiomas;
+
+	private String[] timezones;
 
 }
